@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"time"
-	"net/http"
 	"os"
 
-	"github.com/flosch/pongo2"
+	"golang-blog/handler"
+	"golang-blog/repository"
+
 	"github.com/jinzhu/gorm"
   	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
@@ -20,10 +21,6 @@ const tmplPath = "src/template/"
 var e = createMux()
 var db *gorm.DB
 
-type Article struct {
-	Id int
-    Title string
-  }
 
 func main() {
 
@@ -33,14 +30,16 @@ func main() {
 		panic(".envが見つからないよ")
 	}
 
+	// DB接続
 	db = sqlConnect()
+	repository.SetDB(db)
 	defer db.Close()
 
-  // "/"にGETメソッドでアクセスがあった場合にarticleIndex関数を実行
-	e.GET("/"         , articleIndex)
-	e.GET("/new"      , articleNew)
-	e.GET("/:id"      , articleShow)
-	e.GET("/:id/edit" , articleEdit)
+    // "/"にGETメソッドでアクセスがあった場合にarticleIndex関数を実行
+	e.GET("/"         , handler.ArticleIndex)
+	e.GET("/new"      , handler.ArticleNew)
+	e.GET("/:id"      , handler.ArticleShow)
+	e.GET("/:id/edit" , handler.ArticleEdit)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
@@ -92,54 +91,3 @@ func sqlConnect() (database *gorm.DB) {
 
 	return db
   }
-
-// 一覧表示
-func articleIndex(c echo.Context) error {
-	var article_list []Article
-    db.Find(&article_list)
-
-	// 空のインターフェースは、任意の型の値を保持できる。
-	data := map[string]interface{}{
-		"article_list" : article_list,
-	}
-	return render(c, "article/index.html", data)
-}
-
-// 新規作成
-func articleNew(c echo.Context) error {
-	data := map[string]interface{}{
-		"Message" : "new",
-	}
-	return render(c, "article/new.html", data)
-}
-
-// 詳細
-func articleShow(c echo.Context) error {
-	data := map[string]interface{}{
-		"Message" : "show",
-	}
-	return render(c, "article/show.html", data)
-}
-
-// 編集
-func articleEdit(c echo.Context) error {
-	data := map[string]interface{}{
-		"Message" : "edit",
-	}
-	return render(c, "article/edit.html", data)
-}
-
-
-func render(c echo.Context, file string, data map[string]interface{}) error {
-	// 生成された HTML をバイトデータとして受け取る
-    b, err := htmlBlob(file, data)
-    if err != nil {
-      return c.NoContent(http.StatusInternalServerError)
-    }
-    return c.HTMLBlob(http.StatusOK, b)
-}
-
-// テンプレートとデータからHTMLをバイトデータとして生成
-func htmlBlob(file string, data map[string]interface{}) ([]byte, error) {
-    return pongo2.Must(pongo2.FromCache(tmplPath + file)).ExecuteBytes(data)
-}
