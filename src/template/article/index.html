@@ -1,1 +1,6 @@
-<p>{{ Message }}</p>
+<h2>記事一覧</h2>
+  <ul>
+    {% for article in article_list %}
+    <li>{{ article.Id }}. {{ article.Title }}</li>
+    {% endfor %}
+  </ul>
