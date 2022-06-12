@@ -10,4 +10,5 @@ EXPOSE 8080
 COPY go.mod go.sum ./
 RUN go mod download
 RUN go install github.com/cosmtrek/air@v1.27.3
+RUN go install github.com/rubenv/sql-migrate/...
 CMD ["air"]
