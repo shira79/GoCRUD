@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"golang-blog/model"
 	"golang-blog/repository"
+
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -35,4 +39,33 @@ func ArticleEdit(c echo.Context) error {
 		"Message": "Article Edit",
 	}
 	return render(c, "article/edit.html", data)
+}
+
+// 保存処理のレスポンスデータの構造体
+type ArticleCreateOutput struct {
+	Article *model.Article
+	Message string
+	ValidationErrors []string
+}
+
+// 保存処理
+func ArticleCreate(c echo.Context) error {
+	var article model.Article
+	var out ArticleCreateOutput
+
+	// フォームの内容を構造体に埋め込みます。
+	if err := c.Bind(&article); err != nil {
+		c.Logger().Error(err.Error())
+		return c.JSON(http.StatusBadRequest, out)
+	}
+
+	// 保存処理を実行
+	if err := repository.ArticleCreate(&article); err != nil {
+		c.Logger().Error(err.Error())
+		return c.JSON(http.StatusInternalServerError, out)
+	}
+
+	// レスポンスに保存した記事のデータし返却
+	out.Article = &article
+	return c.JSON(http.StatusOK, out)
 }

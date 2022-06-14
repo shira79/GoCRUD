@@ -40,6 +40,7 @@ func main() {
 	e.GET("/new"      , handler.ArticleNew)
 	e.GET("/:id"      , handler.ArticleShow)
 	e.GET("/:id/edit" , handler.ArticleEdit)
+	e.POST("/", handler.ArticleCreate)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
@@ -52,6 +53,9 @@ func createMux() *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Gzip())
+	e.Use(middleware.CSRF())
+
+	e.Static("/js", "src/js")
 
 	return e
 }

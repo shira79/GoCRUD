@@ -1,0 +1,14 @@
+{% extends "../layout.html" %}
+
+{% block js %}
+<script src="/js/module/form.js"></script>
+{% endblock %}
+
+{% block title %}
+新規作成 | {{ block.Super }}
+{% endblock %}
+
+{% block content %}
+<h2>新規作成</h2>
+<div>{% include "./_form.html" %}</div>
+{% endblock %}
