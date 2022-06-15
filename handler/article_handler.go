@@ -59,6 +59,15 @@ func ArticleCreate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, out)
 	}
 
+	// バリデーション
+	if err := c.Validate(&article); err != nil {
+		c.Logger().Error(err)
+
+		// エラーセットをレスポンスにセットして、返却
+		out.ValidationErrors = article.ValidationErrors(err)
+		return c.JSON(http.StatusUnprocessableEntity, out)
+	}
+
 	// 保存処理を実行
 	if err := repository.ArticleCreate(&article); err != nil {
 		c.Logger().Error(err.Error())

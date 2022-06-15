@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/joho/godotenv"
+	"github.com/go-playground/validator"
 )
 
 const tmplPath = "src/template/"
@@ -57,7 +58,19 @@ func createMux() *echo.Echo {
 
 	e.Static("/js", "src/js")
 
+	e.Validator = &CustomValidator{validator: validator.New()}
+
 	return e
+}
+
+// Validator用の構造体
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+// Validate関数を実装することで、Validatorインターフェイスを実装。
+func (cv *CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
 }
 
 // DBとのコネクション確立
