@@ -36,12 +36,19 @@ func main() {
 	repository.SetDB(db)
 	defer db.Close()
 
-    // "/"にGETメソッドでアクセスがあった場合にarticleIndex関数を実行
-	e.GET("/"         , handler.ArticleIndex)
-	e.GET("/new"      , handler.ArticleNew)
-	e.GET("/:id"      , handler.ArticleShow)
-	e.GET("/:id/edit" , handler.ArticleEdit)
-	e.POST("/", handler.ArticleCreate)
+    // TOP
+	e.GET("/", handler.ArticleIndex)
+
+	// HTML返却
+	e.GET("/articles", handler.ArticleIndex)
+	e.GET("/articles/new", handler.ArticleNew)
+	e.GET("/articles/:articleID", handler.ArticleShow)
+	e.GET("/articles/:articleID/edit", handler.ArticleEdit)
+
+	// JSON返却
+	e.GET("/api/articles", handler.ArticleList)
+	e.POST("/api/articles", handler.ArticleCreate)
+	e.DELETE("/api/articles/:articleID", handler.ArticleDelete)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
@@ -57,6 +64,7 @@ func createMux() *echo.Echo {
 	e.Use(middleware.CSRF())
 
 	e.Static("/js", "src/js")
+	e.Static("/css", "src/css")
 
 	e.Validator = &CustomValidator{validator: validator.New()}
 
