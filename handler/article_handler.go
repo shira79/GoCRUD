@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"fmt"
 	"strconv"
+	"errors"
 
 	"github.com/labstack/echo/v4"
+	"github.com/jinzhu/gorm"
 )
 
 // 一覧表示
@@ -25,7 +27,7 @@ func ArticleIndex(c echo.Context) error {
 	if err := repository.ArticleListByCursor(&articles, initialCursor); err != nil {
 		c.Logger().Error(err.Error())
 		// 500を返却
-		return c.NoContent(http.StatusInternalServerError)
+		return render(c, "error/500.html", map[string]interface{}{})
 	}
 
 	// 取得した最後の記事のIDをカーソルにする
@@ -51,8 +53,24 @@ func ArticleNew(c echo.Context) error {
 
 // 詳細
 func ArticleShow(c echo.Context) error {
+
+	var article model.Article
+	id, _ := strconv.Atoi(c.Param("articleID"))
+
+	if err := repository.ArticleByID(&article, id); err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound){
+			c.Logger().Error(err.Error())
+			return render(c, "error/404.html", map[string]interface{}{})
+
+		} else {
+			c.Logger().Error(err.Error())
+			return render(c, "error/500.html", map[string]interface{}{})
+		}
+	}
+
 	data := map[string]interface{}{
-		"Message": "Article Show",
+		"Article": article,
 	}
 	return render(c, "article/show.html", data)
 }

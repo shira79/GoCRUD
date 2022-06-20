@@ -25,6 +25,14 @@ func ArticleListByCursor(articles *[]model.Article, cursor int) error {
 	return nil
 }
 
+// IDで記事取得
+func ArticleByID(article *model.Article, id int) error {
+	if err := db.First(article, id).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 // 記事作成
 func ArticleCreate(article *model.Article) error {
 	now := time.Now()
@@ -43,7 +51,7 @@ func ArticleCreate(article *model.Article) error {
 func ArticleDelete(id int) error {
 
 	result := db.Delete(&model.Article{}, id)
-	if  result.Error != nil {
+	if result.Error != nil {
 		return result.Error
 	}
 
