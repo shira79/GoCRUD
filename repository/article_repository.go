@@ -61,3 +61,20 @@ func ArticleDelete(id int) error {
 
 	return nil
 }
+
+// 記事更新
+func ArticleUpdate(article *model.Article, id int) error {
+
+
+	update := map[string]interface{}{
+		"Title": article.Title,
+		"Body": article.Body,
+		"Updated": time.Now(),
+	}
+
+	if result := db.Model(&model.Article{}).Where("id = ?", id).Update(update); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}

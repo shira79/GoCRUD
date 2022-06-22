@@ -45,10 +45,7 @@ func ArticleIndex(c echo.Context) error {
 
 // 新規作成
 func ArticleNew(c echo.Context) error {
-	data := map[string]interface{}{
-		"Message": "Article New",
-	}
-	return render(c, "article/new.html", data)
+	return render(c, "article/new.html", map[string]interface{}{})
 }
 
 // 詳細
@@ -77,8 +74,23 @@ func ArticleShow(c echo.Context) error {
 
 // 編集
 func ArticleEdit(c echo.Context) error {
+	var article model.Article
+	id, _ := strconv.Atoi(c.Param("articleID"))
+
+	if err := repository.ArticleByID(&article, id); err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound){
+			c.Logger().Error(err.Error())
+			return render(c, "error/404.html", map[string]interface{}{})
+
+		} else {
+			c.Logger().Error(err.Error())
+			return render(c, "error/500.html", map[string]interface{}{})
+		}
+	}
+
 	data := map[string]interface{}{
-		"Message": "Article Edit",
+		"Article": article,
 	}
 	return render(c, "article/edit.html", data)
 }
@@ -116,7 +128,7 @@ func ArticleCreate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, out)
 	}
 
-	// レスポンスに保存した記事のデータし返却
+	// レスポンスに保存した記事のデータをセットし、返却
 	out.Article = &article
 	return c.JSON(http.StatusOK, out)
 }
@@ -148,4 +160,44 @@ func ArticleList(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, articles)
+}
+
+// 更新処理のレスポンスデータの構造体
+type ArticleUpdateOutput struct {
+	Article          *model.Article
+	Message          string
+	ValidationErrors []string
+}
+
+// 更新処理
+func ArticleUpdate(c echo.Context) error {
+
+	var article model.Article
+	var out ArticleUpdateOutput
+
+	id, _ := strconv.Atoi(c.Param("articleID"))
+
+	if err := c.Bind(&article); err != nil {
+		// リクエストのパラメータの解釈に失敗した場合は 400 エラーを返却します。
+		return c.JSON(http.StatusBadRequest, out)
+	}
+
+	// バリデーション
+	if err := c.Validate(&article); err != nil {
+		c.Logger().Error(err)
+
+		// エラーセットをレスポンスにセットして、返却
+		out.ValidationErrors = article.ValidationErrors(err)
+		return c.JSON(http.StatusUnprocessableEntity, out)
+	}
+
+	// 更新処理
+	if err := repository.ArticleUpdate(&article, id); err != nil {
+		c.Logger().Error(err.Error())
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// レスポンスに保存した記事のデータをセットし、返却
+	out.Article = &article
+	return c.JSON(http.StatusOK, out)
 }
